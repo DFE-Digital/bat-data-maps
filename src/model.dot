@@ -1,0 +1,97 @@
+digraph DfE {
+
+
+
+subgraph cluster_logical {
+         label = "Logical Objects";
+         node [shape=record];
+
+         edge [arrowhead=vee];
+
+         // Problem Domain Objects, with edges indicating reference
+
+         "school" [
+         label = "{<root> School | <urn> URN | <ukprn> UKPRN}"
+         ];
+
+         "itt-provider" [
+         label = "{<root> ITT Provider | <lead> lead school}"
+         ];
+
+         "itt-provider":lead -> "school":root
+
+         "person" [
+         label = "{<root> Person | TRN (optional) }"
+         ];
+
+         "employment" [
+         label = "{<root> Employment | start | end | role | <employee> employee | <employer> employer }"
+         ];
+
+         "employment":employee -> "person":root
+         "employment":employer -> "itt-provider":root
+         "employment":employer -> "school":root
+
+         "school-experience" [
+         label = "{<root> School Experience | start | end | <person> person | <school> school}"
+         ];
+
+         "school-experience":person -> "person":root
+         "school-experience":school -> "school":root
+
+         "itt-course" [
+         label = "{<root> ITT Course | <provider> provider}"
+         ];
+
+         "itt-course":provider -> "itt-provider":root
+
+         "itt-application" [
+         label = "{<root> ITT Application | <applicant> applicant | <course> course | status}"
+         ];
+
+         "itt-application":applicant -> person:root
+         "itt-application":course -> "itt-course":root
+
+}
+
+
+subgraph cluster_physical {
+         label = "Physical Data Stores";
+         node [shape = oval];
+
+         edge [arrowhead = onormal];
+
+         // Physical Data Stores, with edges indicating data flow
+
+         "publish";
+         "bigquery";
+         "apply";
+         "find";
+
+         "publish" -> "bigquery";
+         "apply" -> "bigquery";
+         "find" -> "bigquery";
+}
+
+subgraph {
+         // Relationship between physical and logical data stores; edges from logical to physical realisation
+         edge [ arrowhead = curve; style = dotted;]
+
+         "itt-provider":root -> publish
+         "itt-course":root -> publish
+
+         "itt-provider":root -> find
+         "itt-course":root -> find
+
+         "person":root -> apply
+         "itt-provider":root -> apply
+         "itt-course":root -> apply
+         "itt-application":root -> apply
+
+         "person":root -> bigquery
+         "itt-provider":root -> bigquery
+         "itt-course":root -> bigquery
+         "itt-application":root -> bigquery
+}
+
+}
