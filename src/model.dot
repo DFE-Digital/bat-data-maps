@@ -8,7 +8,34 @@ subgraph cluster_logical {
 
          edge [arrowhead=vee];
 
-         // Problem Domain Objects, with edges indicating reference
+         // Problem Domain Objects, with edges indicating references
+
+         /*
+         STYLE GUIDE
+
+         1) Use vertical record nodes for objects, with a <root> field for the
+         title at the top.
+
+         2) Represent references like pointers or foreign keys - arrows from the
+         thing that stores an ID to the thing that has that ID. Use fields to
+         indicate which field stores the ID, and reference the <root> field on
+         the target to avoid confusion.
+
+         3) Don't explicitly represent the storing of history. For instance, we
+         want a history of lead school relationships from a provider so we can
+         know who WAS the lead school or who is SCHEDULED to be the lead school,
+         but we don't explicitly show this in the diagram. However, things like
+         employments that have a start/end as well as some other useful
+         properties (such as the role) we DO explicitly show, even though their
+         start/end forms a history, as there's other imoprtant state to show, or
+         a potential many-to-many relationship (as is the case with school experience).
+
+         4) Avoid cluttering the diagram with technical details: keep it
+         problem-domain focussed. Omit obvious uninteresting fields (names,
+         etc). Summarise groups of fields ("contact details" rather than
+         address1, address2, ...)
+
+         */
 
          "school" [
          label = "{<root> School | <urn> URN | <ukprn> UKPRN}"
@@ -17,8 +44,11 @@ subgraph cluster_logical {
          "itt-provider" [
          label = "{<root> ITT Provider | <lead> lead school}"
          ];
-
          "itt-provider":lead -> "school":root
+
+         "accreditation-provider" [
+                  label = "{<root> Accreditation Provider (HEI/SCITT) }"
+         ];
 
          "person" [
          label = "{<root> Person | TRN (optional) }"
@@ -27,7 +57,6 @@ subgraph cluster_logical {
          "employment" [
          label = "{<root> Employment | start | end | role | <employee> employee | <employer> employer }"
          ];
-
          "employment":employee -> "person":root
          "employment":employer -> "itt-provider":root
          "employment":employer -> "school":root
@@ -35,25 +64,22 @@ subgraph cluster_logical {
          "school-experience" [
          label = "{<root> School Experience | start | end | <person> person | <school> school}"
          ];
-
          "school-experience":person -> "person":root
          "school-experience":school -> "school":root
 
+         // Lead school MIGHT be a property of the course, not the itt-provider
          "itt-course" [
-         label = "{<root> ITT Course | <provider> provider}"
+         label = "{<root> ITT Course | <provider> provider | <accreditor> accreditor}"
          ];
-
          "itt-course":provider -> "itt-provider":root
+         "itt-course":accreditor -> "accreditation-provider":root
 
          "itt-application" [
          label = "{<root> ITT Application | <applicant> applicant | <course> course | status}"
          ];
-
          "itt-application":applicant -> person:root
          "itt-application":course -> "itt-course":root
-
 }
-
 
 subgraph cluster_physical {
          label = "Physical Data Stores";
@@ -61,37 +87,110 @@ subgraph cluster_physical {
 
          edge [arrowhead = onormal];
 
-         // Physical Data Stores, with edges indicating data flow
+         // Physical Data Stores, with edges indicating synchronising data flow
 
-         "publish";
+         // Synchronisations done within an existing component (like the
+         // updating of bigquery by the services) or by a dedicated data
+         // synchronising system should be indicated here; any synchronisation that
+         // involves some interesting processing should really be indicated by a
+         // service/system in the next section that talks to source and sink
+         // DBs. Use your judgement to decide what would make for a clearer
+         // diagram.
+
+         "git crm";
+         "publish db";
+         "experience db"; // GIAS database
+         "apply db";
+
+         "dttp";
+         "tad db";
+         "dqt";
+         "tps db";
+
+         "gias db";
+
          "bigquery";
-         "apply";
-         "find";
 
-         "publish" -> "bigquery";
-         "apply" -> "bigquery";
-         "find" -> "bigquery";
+         // Data flows: services updating bigquery in real time
+         "publish db" -> "bigquery";
+         "apply db" -> "bigquery";
+
+         // Data flows: Things taking dumps of GIAS via the bulk download - see https://github.com/search?q=org%3ADFE-Digital+ea-edubase-api-prod&type=code for more to add in future
+         "gias db" -> "register db" [label="manual dump"];
+         "gias db" -> "experience db" [label="nightly dump"];
 }
 
 subgraph {
          // Relationship between physical and logical data stores; edges from logical to physical realisation
          edge [ arrowhead = curve; style = dotted;]
 
-         "itt-provider":root -> publish
-         "itt-course":root -> publish
+         // Sorted by the physical DB (arrow target)
 
-         "itt-provider":root -> find
-         "itt-course":root -> find
+         "person":root -> "git crm";
 
-         "person":root -> apply
-         "itt-provider":root -> apply
-         "itt-course":root -> apply
-         "itt-application":root -> apply
+         "itt-provider":root -> "publish db"
+         "itt-course":root -> "publish db"
 
-         "person":root -> bigquery
-         "itt-provider":root -> bigquery
-         "itt-course":root -> bigquery
-         "itt-application":root -> bigquery
+         "school-experience":root -> "experience db"
+
+         "person":root -> "apply db"
+         "itt-provider":root -> "apply db"
+         "itt-course":root -> "apply db"
+         "itt-application":root -> "apply db"
+
+         "school":root -> "gias db";
+
+         "itt-provider":root -> "dttp";
+         "person":root -> "dttp";
+}
+
+subgraph cluster_actors {
+         // Services and software agents, with edges indicating "uses", either a database connection or calling an API or similar
+
+         label = "Services and Systems";
+         node [ shape = box3d;]
+         edge [ arrowhead = normal;]
+
+         "find"
+         "find" -> "publish"
+
+         "apply"
+         "apply" -> "apply db"
+         "apply" -> "publish"
+
+         "manage"
+         "manage" -> "apply db"
+
+         "publish"
+         "publish" -> "publish db"
+
+         "tps"
+         "tps" -> "tps db"
+
+         "get experience"
+         "get experience" -> "experience db"
+
+         "tad"
+         "tad" -> "tad db"
+
+         "gias"
+         "gias" -> "gias db"
+
+         "register"
+         "register" -> "register db"
+}
+
+subgraph cluster_key {
+        label = "KEY"
+
+        "service" [ label = "Service / System"; shape = box3d ];
+        "database" [ label = "Database"; shape = oval ];
+        "object" [ label = "Problem-Domain Object"; shape = record ];
+
+        "service" -> "service" [ label = "API call"; arrowhead = normal; ]
+        "service" -> "database" [ label = "Uses Database"; ]
+        "database" -> "database" [ label = "Synchronisation"; arrowhead = onormal; ]
+        "object" -> "database" [ label = "Data Is Stored In"; arrowhead = curve; style = dotted; ]
 }
 
 }
