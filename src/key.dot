@@ -1,0 +1,10 @@
+digraph "DfE Key" {
+        "service" [ label = "Service / System"; shape = box3d ];
+        "database" [ label = "Database"; shape = oval ];
+        "object" [ label = "Problem-Domain Object"; shape = record ];
+
+        "service" -> "service" [ label = "API call"; arrowhead = normal; ]
+        "service" -> "database" [ label = "Uses Database"; ]
+        "database" -> "database" [ label = "Synchronisation"; arrowhead = onormal; ]
+        "object" -> "database" [ label = "Data Is Stored In" headlabel="Table name"; arrowhead = curve; style = dotted; ]
+}
