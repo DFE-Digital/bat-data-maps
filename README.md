@@ -61,9 +61,3 @@ This table shows the same information as the Realisations chart, but with furthe
 #### Actors and Databases (`out/actors_dbs.svg`, `out/actors_dbs.png`, `make view-actors`)
 
 This shows what services or other software agents use what physical databases. It also shows where actors use each other to access data, via an API.
-
-## Plan
-
-Initially develop the maps in [GraphViz](https://graphviz.org/) format, for ease of adding stuff.
-
-When it's stable we can think about manually laying the diagrams out to make them clearer.

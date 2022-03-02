@@ -50,12 +50,22 @@ class PhysicalSynchronization
 end
 
 class Realisation
+  # De-dupe realization arcs, when the object is realised in multiple tables in
+  # the same physical DB just draw one arrow
+  def initialize(logical_object, physical_database, table, keys)
+    @@already_done = Hash.new()
+    super(logical_object, physical_database, table, keys)
+  end
   def render
-    print "\"#{self.logical_object}\" -> \"#{self.physical_database}\" [arrowhead = curve; style = dotted"
-    if self.table != nil
-      print "; headlabel=\"#{self.table}\""
+    if not @@already_done[self.logical_object + "->" + self.physical_database]
+      print "\"#{self.logical_object}\" -> \"#{self.physical_database}\" [arrowhead = curve; style = dotted"
+      # Including the table names made the diagram too cluttered
+      #    if self.table != nil
+      #      print "; headlabel=\"#{self.table}\""
+      #    end
+      puts "]"
+      @@already_done[self.logical_object + "->" + self.physical_database] = true
     end
-    puts "]"
   end
 end
 
@@ -184,25 +194,33 @@ class Map
 
   def generate_realisation_html_view()
     puts "<html>"
+    puts "<head>"
+    puts "<style>"
+    puts "table { border-collapse: collapse; }"
+    puts "th { background: rgb(200,200,255); margin: 0px; padding: 8pt}"
+    puts "td { border-bottom: 1px solid black; margin: 0px; padding: 8pt}"
+    puts ".unknown { color: #999; font-style: italic }"
+    puts "</style>"
+    puts "</head>"
     puts "<body>"
-    puts "<table border=\"1\">"
-    puts "<tr><th>Logical Object</th><th>Physical Database [: Table]</th><th>Key</th></tr>"
+    puts "<table>"
+    puts "<tr><th>Logical Object</th><th>Physical Database</th><th>Table [ : Key]</th></tr>"
     @realisations.sort { |a,b| a.logical_object <=> b.logical_object }.each do |realisation|
       object_name = @nodes[realisation.logical_object].name
       db_name = @nodes[realisation.physical_database].name
       if realisation.table != nil
         if realisation.keys.length == 0
-          puts "<tr><td>#{object_name}</td><td>#{db_name} : #{realisation.table}</td><td></td></tr>"
+          puts "<tr><td>#{object_name}</td><td>#{db_name}</td><td>#{realisation.table}</td></tr>"
         else
           kr = render_key_html(realisation.keys.first)
-          puts "<tr><td rowspan=\"#{realisation.keys.length}\">#{object_name}</td><td rowspan=\"#{realisation.keys.length}\">#{db_name} : #{realisation.table}</td><td>#{kr}</td></tr>"
+          puts "<tr><td rowspan=\"#{realisation.keys.length}\">#{object_name}</td><td rowspan=\"#{realisation.keys.length}\">#{db_name}</td><td>#{realisation.table} : #{kr}</td></tr>"
           realisation.keys[1..].each do |key|
             kr = render_key_html(key)
-            puts "<tr><td>#{kr}</td></tr>"
+            puts "<tr><td>#{realisation.table} : #{kr}</td></tr>"
           end
         end
       else
-        puts "<tr><td>#{object_name}</td><td>#{db_name}</td><td></td></tr>"
+        puts "<tr><td>#{object_name}</td><td>#{db_name}</td><td class=\"unknown\">unknown</td></tr>"
       end
     end
     puts "</table>"
@@ -286,7 +304,7 @@ map.logical_link("job-application","applicant","person")
 map.logical_link("job-application","vacancy","vacancy")
 map.logical_link("job-application","job","employment")
 
-map.logical_object("school-experience","School experience",["start / end",["person","Person"],["school","School"]])
+map.logical_object("school-experience","School Experience Trial",["start / end",["person","Person"],["school","School"]])
 map.logical_link("school-experience","person","person")
 map.logical_link("school-experience","school","location")
 
@@ -309,32 +327,32 @@ map.logical_link("itt-application","course","itt-course")
 # process should probably be indicated by an actor that talks to source and sink
 # databases. Use your judgement to decide what would make for a clearer diagram.
 
-map.physical_database("git crm")
+map.physical_database("git crm", "GIT CRM")
 map.realisation("person","git crm")
 
-map.physical_database("publish db")
+map.physical_database("publish db", "Publish db")
 map.realisation("itt-provider","publish db","Provider",["code"])
 map.realisation("itt-course","publish db","Course",["code","uuid"])
 map.realisation("itt-subject","publish db","Subject",["code","name~"])
 map.realisation("location","publish db", "Site", ["uuid"])
 map.realisation("person","publish db","ProviderUser",["dfe_sign_in_uid"])
 
-map.physical_database("experience db")
+map.physical_database("experience db", "Get School Experience DB")
 map.physical_synch("gias db","experience db","nightly dump")
 map.realisation("person","experience db")
 map.realisation("location","experience db")
 map.realisation("school-experience","experience db")
 
-map.physical_database("apply db")
+map.physical_database("apply db", "Apply DB")
 map.realisation("person","apply db","ProviderUser",["dfe_sign_in_uid"])
 map.realisation("person","apply db","SupportUser",["dfe_sign_in_uid"])
 map.realisation("person","apply db","Candidate",["email_address~"])
 map.realisation("itt-provider","apply db","Provider",["code"])
 map.realisation("itt-course","apply db","Course",["code","uuid"])
 map.realisation("itt-subject","apply db","Subject",["code","name~"])
-map.realisation("itt-application","apply db","ApplicationChoice",[""]) # Maybe provider_ids is the application ID as used by the provider?
+map.realisation("itt-application","apply db","ApplicationChoice",[]) # Maybe provider_ids is the application ID as used by the provider?
 
-map.physical_database("register db")
+map.physical_database("register db", "Register DB")
 map.physical_synch("gias db","register db","manual dump")
 map.realisation("person","register db","Trainee",["trainee_id","hesa_id","provider_id","trn?","dttp_id?","email~"])
 map.realisation("person","register db","User",["dfe_sign_in_uid","dttp_id?"])
@@ -344,22 +362,22 @@ map.realisation("itt-subject","register db","Subject",["code","name~"])
 map.realisation("itt-application","register db","ApplyApplication",["apply_id"])
 map.realisation("location","register db","School",["urn"])
 
-map.physical_database("dttp")
+map.physical_database("dttp", "DTTP")
 map.physical_synch("dttp","dqt","TRN allocation")
 map.physical_synch("dttp","dqt","QTS award")
 map.realisation("itt-provider","dttp")
 map.realisation("person","dttp")
 
-map.physical_database("dqt")
+map.physical_database("dqt", "DQT")
 map.realisation("person","dqt")
 
-map.physical_database("tps db")
+map.physical_database("tps db", "TPS DB")
 map.realisation("person","tps db")
 
-map.physical_database("gias db")
+map.physical_database("gias db", "GIAS DB")
 map.realisation("location","gias db")
 
-map.physical_database("bigquery")
+map.physical_database("bigquery", "BigQuery")
 map.physical_synch("publish db","bigquery","stream")
 map.physical_synch("apply db","bigquery","stream")
 map.physical_synch("register db","bigquery","stream")
@@ -381,7 +399,6 @@ map.realisation("location","bigquery","sites_apply",["site_id","code"])
 map.realisation("itt-subject","bigquery","subject_publish_api",["subject_id","subject_code","subject_name"])
 map.realisation("itt-subject","bigquery","subjects_apply",["subject_id","name","code"])
 map.realisation("person","bigquery","user",["user_id"])
-
 
 # Actors, and what physical DBs and other actors they use
 
