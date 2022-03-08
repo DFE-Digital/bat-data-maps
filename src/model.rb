@@ -1,259 +1,4 @@
-## Types
-
-LogicalObjectPart = Struct.new(:id,:name,:optional?)
-LogicalObject = Struct.new(:id,:name,:parts)
-LogicalLink = Struct.new(:source_object,:source_part,:target_object)
-PhysicalDatabase = Struct.new(:id,:name)
-PhysicalSynchronization = Struct.new(:source_db,:target_db,:trigger)
-Realisation = Struct.new(:logical_object,:physical_database,:table,:keys)
-Actor = Struct.new(:id,:name)
-ActorDependency = Struct.new(:using_actor,:used_actor_or_db)
-
-## Object renderers
-
-class LogicalObject
-  def render
-    puts "\"#{self.id}\" ["
-    puts "  shape=record,"
-    print "  label = \"{<root> #{self.name}"
-    self.parts.each do |part|
-      print " |"
-      if part.id != nil
-        print " <#{part.id}>"
-      end
-      print " #{part.name}"
-      if part.optional?
-        print " (optional)"
-      end
-    end
-    puts "}\""
-    puts "];"
-  end
-end
-
-class LogicalLink
-  def render
-    puts "\"#{self.source_object}\":#{self.source_part} -> \"#{self.target_object}\":root [arrowhead=vee]"
-  end
-end
-
-class PhysicalDatabase
-  def render
-    puts "\"#{self.id}\" [shape=oval, label=\"#{self.name}\"]"
-  end
-end
-
-class PhysicalSynchronization
-  def render
-    puts "\"#{self.source_db}\" -> \"#{self.target_db}\" [arrowhead = onormal, label=\"#{self.trigger}\"]"
-  end
-end
-
-class Realisation
-  # De-dupe realization arcs, when the object is realised in multiple tables in
-  # the same physical DB just draw one arrow
-  def initialize(logical_object, physical_database, table, keys)
-    @@already_done = Hash.new()
-    super(logical_object, physical_database, table, keys)
-  end
-  def render
-    if not @@already_done[self.logical_object + "->" + self.physical_database]
-      print "\"#{self.logical_object}\" -> \"#{self.physical_database}\" [arrowhead = curve; style = dotted"
-      # Including the table names made the diagram too cluttered
-      #    if self.table != nil
-      #      print "; headlabel=\"#{self.table}\""
-      #    end
-      puts "]"
-      @@already_done[self.logical_object + "->" + self.physical_database] = true
-    end
-  end
-end
-
-class Actor
-  def render
-    puts "\"#{self.id}\" [shape=box3d, label=\"#{self.name}\"]"
-  end
-end
-
-class ActorDependency
-  def render
-    puts "\"#{self.using_actor}\" -> \"#{self.used_actor_or_db}\" [arrowhead = normal]"
-  end
-end
-
-def render(things)
-  things.each do |thing|
-    thing.render()
-  end
-end
-
-## Main map class
-
-class Map
-  def initialize()
-    @logical_objects = Array.new()
-    @logical_links = Array.new()
-    @physical_dbs = Array.new()
-    @physical_synchs = Array.new()
-    @realisations = Array.new()
-    @actors = Array.new()
-    @actor_dependencies = Array.new()
-
-    @nodes = Hash.new()
-  end
-
-  ## Data inserters
-  def logical_object(id,name=id,parts=[])
-    node = LogicalObject.new(id,name,parts.map do |element|
-                               if element.class == String
-                                 LogicalObjectPart.new(nil,element,false)
-                               elsif element.class == Array
-                                 if element.length == 2
-                                   LogicalObjectPart.new(element[0],element[1],false)
-                                 elsif element.length == 3
-                                   LogicalObjectPart.new(*element)
-                                 else
-                                   raise "Invalid logical object part #{element}"
-                                 end
-                               else
-                                 raise "Invalid logical object part #{element}"
-                               end
-                             end)
-    @logical_objects.push(node)
-    @nodes[id] = node
-  end
-
-  def logical_link(source_object,source_part,target_object)
-    @logical_links.push(LogicalLink.new(source_object,source_part,target_object))
-  end
-
-  def physical_database(id,name=id)
-    node = PhysicalDatabase.new(id,name)
-    @physical_dbs.push(node)
-    @nodes[id] = node
-  end
-
-  def physical_synch(source_db,target_db,trigger)
-    @physical_synchs.push(PhysicalSynchronization.new(source_db,target_db,trigger))
-  end
-
-  def realisation(logical_object,physical_database,table=nil,keys=[])
-    @realisations.push(Realisation.new(logical_object,physical_database,table,keys))
-  end
-
-  def actor(id,name=id)
-    node = Actor.new(id,name)
-    @actors.push(node)
-    @nodes[id] = node
-  end
-
-  def actor_uses(actor,actor_or_db)
-    @actor_dependencies.push(ActorDependency.new(actor,actor_or_db))
-  end
-
-  ## View generators
-  def generate_logical_view()
-    puts "digraph \"DfE Logical\" {"
-    render (@logical_objects)
-    render (@logical_links)
-    puts "}"
-  end
-
-  def generate_physical_view()
-    puts "digraph \"DfE Physical\" {"
-    render (@physical_dbs)
-    render (@physical_synchs)
-    puts "}"
-  end
-
-  def generate_realisation_view()
-    puts "digraph \"DfE Realisations\" {"
-    render (@logical_objects)
-    render (@physical_dbs)
-    render (@realisations)
-    puts "}"
-  end
-
-  def generate_actors_view()
-    puts "digraph \"DfE Actors\" {"
-    render (@physical_dbs)
-    render (@actors)
-    render (@actor_dependencies)
-    puts "}"
-  end
-
-  def render_key_html(key)
-    if key.end_with?("?")
-      "<i>#{key[..-2]}</i> <b>(optional)</b>"
-    elsif key.end_with?("~")
-      "<i>#{key[..-2]}</i> <b>(fuzzy)</b>"
-    else
-      key
-    end
-  end
-
-  def generate_realisation_html_view()
-    puts "<html>"
-    puts "<head>"
-    puts "<style>"
-    puts "table { border-collapse: collapse; }"
-    puts "th { background: rgb(200,200,255); margin: 0px; padding: 8pt}"
-    puts "td { border-bottom: 1px solid black; margin: 0px; padding: 8pt}"
-    puts ".unknown { color: #999; font-style: italic }"
-    puts "</style>"
-    puts "</head>"
-    puts "<body>"
-    puts "<table>"
-    puts "<tr><th>Logical Object</th><th>Physical Database</th><th>Table [ : Key]</th></tr>"
-    @realisations.sort { |a,b| a.logical_object <=> b.logical_object }.each do |realisation|
-      object_name = @nodes[realisation.logical_object].name
-      db_name = @nodes[realisation.physical_database].name
-      if realisation.table != nil
-        if realisation.keys.length == 0
-          puts "<tr><td>#{object_name}</td><td>#{db_name}</td><td>#{realisation.table}</td></tr>"
-        else
-          kr = render_key_html(realisation.keys.first)
-          puts "<tr><td rowspan=\"#{realisation.keys.length}\">#{object_name}</td><td rowspan=\"#{realisation.keys.length}\">#{db_name}</td><td>#{realisation.table} : #{kr}</td></tr>"
-          realisation.keys[1..].each do |key|
-            kr = render_key_html(key)
-            puts "<tr><td>#{realisation.table} : #{kr}</td></tr>"
-          end
-        end
-      else
-        puts "<tr><td>#{object_name}</td><td>#{db_name}</td><td class=\"unknown\">unknown</td></tr>"
-      end
-    end
-    puts "</table>"
-    puts "</body>"
-    puts "</html>"
-  end
-
-  def generate_all_views()
-    old_stdout = $stdout
-    
-    $stdout = File.new("logical.dot","w")
-    generate_logical_view()
-    $stdout.close()
-    
-    $stdout = File.new("physical.dot","w")
-    generate_physical_view()
-    $stdout.close()
-    
-    $stdout = File.new("realisations.dot","w")
-    generate_realisation_view()
-    $stdout.close()
-    
-    $stdout = File.new("realisations.html","w")
-    generate_realisation_html_view()
-    $stdout.close()
-    
-    $stdout = File.new("actors_dbs.dot","w")
-    generate_actors_view()
-    $stdout.close()
-
-    $stdout = old_stdout
-  end
-end
+require_relative 'engine'
 
 ## The data
 
@@ -319,7 +64,7 @@ map.logical_object("itt-application","ITT Application",[["applicant","Applicatn"
 map.logical_link("itt-application","applicant","person")
 map.logical_link("itt-application","course","itt-course")
 
-# Physical databases, synchronisations between them, and realisations of logical objects in them
+# Physical databases, synchronisations between them, and representations of logical objects in them
 
 # Synchronisation done within an existing component (like the updating of
 # bigquery by the services) or by a dedicated data synchronising system should
@@ -327,101 +72,102 @@ map.logical_link("itt-application","course","itt-course")
 # process should probably be indicated by an actor that talks to source and sink
 # databases. Use your judgement to decide what would make for a clearer diagram.
 
-map.physical_database("git crm", "GIT CRM")
-map.realisation("person","git crm")
+map.physical_database("git crm", "GIT (Get Into Teaching) CRM (Customer Relationship Manager)")
+map.representation("person","git crm")
 
-map.physical_database("publish db", "Publish db")
-map.realisation("itt-provider","publish db","Provider",["code"])
-map.realisation("itt-course","publish db","Course",["code","uuid"])
-map.realisation("itt-subject","publish db","Subject",["code","name~"])
-map.realisation("location","publish db", "Site", ["uuid"])
-map.realisation("person","publish db","ProviderUser",["dfe_sign_in_uid"])
+map.physical_database("publish db", "Publish DB")
+map.representation("itt-provider","publish db","Provider",["code"])
+map.representation("itt-course","publish db","Course",["code","uuid"])
+map.representation("itt-subject","publish db","Subject",["code","name~"])
+map.representation("location","publish db", "Site", ["uuid"])
+map.representation("person","publish db","ProviderUser",["dfe_sign_in_uid"])
 
 map.physical_database("experience db", "Get School Experience DB")
 map.physical_synch("gias db","experience db","nightly dump")
-map.realisation("person","experience db")
-map.realisation("location","experience db")
-map.realisation("school-experience","experience db")
+map.representation("person","experience db")
+map.representation("location","experience db")
+map.representation("school-experience","experience db")
 
 map.physical_database("apply db", "Apply DB")
-map.realisation("person","apply db","ProviderUser",["dfe_sign_in_uid"])
-map.realisation("person","apply db","SupportUser",["dfe_sign_in_uid"])
-map.realisation("person","apply db","Candidate",["email_address~"])
-map.realisation("itt-provider","apply db","Provider",["code"])
-map.realisation("itt-course","apply db","Course",["code","uuid"])
-map.realisation("itt-subject","apply db","Subject",["code","name~"])
-map.realisation("itt-application","apply db","ApplicationChoice",[]) # Maybe provider_ids is the application ID as used by the provider?
+map.representation("person","apply db","ProviderUser",["dfe_sign_in_uid"])
+map.representation("person","apply db","SupportUser",["dfe_sign_in_uid"])
+map.representation("person","apply db","Candidate",["email_address~"])
+map.representation("itt-provider","apply db","Provider",["code"])
+map.representation("itt-course","apply db","Course",["code","uuid"])
+map.representation("itt-subject","apply db","Subject",["code","name~"])
+map.representation("itt-application","apply db","ApplicationChoice",[]) # Maybe provider_ids is the application ID as used by the provider?
 
 map.physical_database("register db", "Register DB")
 map.physical_synch("gias db","register db","manual dump")
-map.realisation("person","register db","Trainee",["trainee_id","hesa_id","provider_id","trn?","dttp_id?","email~"])
-map.realisation("person","register db","User",["dfe_sign_in_uid","dttp_id?"])
-map.realisation("itt-provider","register db","Provider",["dttp_id?","ukprn"])
-map.realisation("itt-course","register db","Course",["uuid","code"])
-map.realisation("itt-subject","register db","Subject",["code","name~"])
-map.realisation("itt-application","register db","ApplyApplication",["apply_id"])
-map.realisation("location","register db","School",["urn"])
+map.representation("person","register db","Trainee",["trainee_id","hesa_id","provider_id","trn?","dttp_id?","email~"])
+map.representation("person","register db","User",["dfe_sign_in_uid","dttp_id?"])
+map.representation("itt-provider","register db","Provider",["dttp_id?","ukprn"])
+map.representation("itt-course","register db","Course",["uuid","code"])
+map.representation("itt-subject","register db","Subject",["code","name~"])
+map.representation("itt-application","register db","ApplyApplication",["apply_id"])
+map.representation("location","register db","School",["urn"])
 
-map.physical_database("dttp", "DTTP")
-map.physical_synch("dttp","dqt","TRN allocation")
-map.physical_synch("dttp","dqt","QTS award")
-map.realisation("itt-provider","dttp")
-map.realisation("person","dttp")
+map.physical_database("dttp", "DTTP (Database of Trainee Teachers and Providers)")
+map.physical_synch("dttp","dqt","TRN (Teacher Reference Number) allocation")
+map.physical_synch("dttp","dqt","QTS (Qualified Teacher Status) award")
+map.representation("itt-provider","dttp")
+map.representation("person","dttp")
 
-map.physical_database("dqt", "DQT")
-map.realisation("person","dqt")
+map.physical_database("dqt", "DQT (Database of Qualified Teachers)")
+map.representation("person","dqt")
 
-map.physical_database("tps db", "TPS DB")
-map.realisation("person","tps db")
+map.physical_database("tps db", "TPS (Teacher Pension Service) DB")
+map.representation("person","tps db")
 
-map.physical_database("gias db", "GIAS DB")
-map.realisation("location","gias db")
+map.physical_database("gias db", "GIAS (Get Information About Schools) DB")
+map.representation("location","gias db")
 
 map.physical_database("bigquery", "BigQuery")
 map.physical_synch("publish db","bigquery","stream")
 map.physical_synch("apply db","bigquery","stream")
 map.physical_synch("register db","bigquery","stream")
-map.realisation("itt-application","bigquery","application_choices",["application_choice_id"])
-map.realisation("person","bigquery","candidates",["candidate_id"])
-map.realisation("itt-course","bigquery","courses_apply",["course_id","code","uuid"])
-map.realisation("person","bigquery","organisation_user",["user_id"])
-map.realisation("person","bigquery","provider_users",["provider_user_id","dfe_sign_in_uid"])
-map.realisation("itt-provider","bigquery","providers_apply",["provider_id"]) # Is code a key?
-map.realisation("itt-course","bigquery","register_courses",["id","course_code","uuid"])
-map.realisation("itt-provider","bigquery","register_dttp_providers",["id","dttp_id?","name~","ukprn"])
-map.realisation("location","bigquery","register_dttp_schools",["id","urn"])
-map.realisation("itt-provider","bigquery","register_providers",["id","dttp_id?","name~","ukprn"])
-map.realisation("location","bigquery","register_schools",["id","urn"])
-map.realisation("itt-subject","bigquery","register_subjects",["id","code","name~"])
-map.realisation("person","bigquery","register_trainees",["id","dttp_id"])
-map.realisation("person","bigquery","register_users",["id","dfe_sign_in_uid","dttp_id?"])
-map.realisation("location","bigquery","sites_apply",["site_id","code"])
-map.realisation("itt-subject","bigquery","subject_publish_api",["subject_id","subject_code","subject_name"])
-map.realisation("itt-subject","bigquery","subjects_apply",["subject_id","name","code"])
-map.realisation("person","bigquery","user",["user_id"])
+map.representation("itt-application","bigquery","application_choices",["application_choice_id"])
+map.representation("person","bigquery","candidates",["candidate_id"])
+map.representation("itt-course","bigquery","courses_apply",["course_id","code","uuid"])
+map.representation("person","bigquery","organisation_user",["user_id"])
+map.representation("person","bigquery","provider_users",["provider_user_id","dfe_sign_in_uid"])
+map.representation("itt-provider","bigquery","providers_apply",["provider_id"]) # Is code a key?
+map.representation("itt-application","bigquery","register_apply_applications",["id","apply_id"])
+map.representation("itt-course","bigquery","register_courses",["id","course_code","uuid"])
+map.representation("itt-provider","bigquery","register_dttp_providers",["id","dttp_id?","name~","ukprn"])
+map.representation("location","bigquery","register_dttp_schools",["id","urn"])
+map.representation("itt-provider","bigquery","register_providers",["id","dttp_id?","name~","ukprn"])
+map.representation("location","bigquery","register_schools",["id","urn"])
+map.representation("itt-subject","bigquery","register_subjects",["id","code","name~"])
+map.representation("person","bigquery","register_trainees",["id","dttp_id"])
+map.representation("person","bigquery","register_users",["id","dfe_sign_in_uid","dttp_id?"])
+map.representation("location","bigquery","sites_apply",["site_id","code"])
+map.representation("itt-subject","bigquery","subject_publish_api",["subject_id","subject_code","subject_name"])
+map.representation("itt-subject","bigquery","subjects_apply",["subject_id","name","code"])
+map.representation("person","bigquery","user",["user_id"])
 
 # Actors, and what physical DBs and other actors they use
 
-map.actor("git")
+map.actor("git", "GIT (Get Into Teaching)")
 map.actor_uses("git","git crm")
 
-map.actor("find")
+map.actor("find", "Find Teacher Training")
 map.actor_uses("find","publish apis")
 
-map.actor("apply")
+map.actor("apply", "Apply for Teacher Training")
 map.actor_uses("apply","apply db")
 map.actor_uses("apply","publish")
 
-map.actor("manage")
+map.actor("manage", "Manage Applications for Teacher Training")
 map.actor_uses("manage","apply db")
 
-map.actor("publish")
+map.actor("publish", "Publish Teacher Training Courses")
 map.actor_uses("publish","publish apis")
 
 map.actor("publish apis")
 map.actor_uses("publish apis","publish db")
 
-map.actor("tps")
+map.actor("tps", "Teacher Pension Service")
 map.actor_uses("tps","tps db")
 
 map.actor("funding")
@@ -436,7 +182,7 @@ map.actor_uses("mra","dttp")
 map.actor("corpa","Corporate Assurance")
 map.actor_uses("corpa","dttp")
 
-map.actor("get experience","Get Experience")
+map.actor("get experience","Get Experience In Schools")
 map.actor_uses("get experience","experience db")
 
 map.actor("tad","Teacher Analysis Division")
@@ -447,10 +193,10 @@ map.actor_uses("tad","dqt")
 map.actor("gias","Get Information About Schools")
 map.actor_uses("gias","gias db")
 
-map.actor("register")
+map.actor("register", "Register Trainee Teachers")
 map.actor_uses("register","register db")
 
-map.actor("hesa","HESA")
+map.actor("hesa","Higher Education Standards Authority")
 map.actor_uses("hesa","dttp")
 map.actor_uses("hesa","dqt")
 

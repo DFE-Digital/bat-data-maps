@@ -61,3 +61,19 @@ This table shows the same information as the Realisations chart, but with furthe
 #### Actors and Databases (`out/actors_dbs.svg`, `out/actors_dbs.png`, `make view-actors`)
 
 This shows what services or other software agents use what physical databases. It also shows where actors use each other to access data, via an API.
+
+## Thoughts and TODOs
+
+### Better capture the complexity of things like Person
+
+Ok, so we have lots of different things in databases that are... *aspects* of a person. Like, `candidate` and `user`. I've mapped them all to the logical object of a "Person" because people are what exist in the real world, but it feels like there's a missing stage here - some logical object corresponding to the "role" of a person as a candidate or a user that actually gets implemented in the DB. It would be nice to have that to reflect that multiple databases tables implement any particular "role", but there's nothing in the map to say that these tables all represent that "role" other than that they're all listed as representations of a "person", which can also mean weaker links like those between tables representing `candidate` and `user`.
+
+### Think of a better term than "realisation". "Representation"?
+
+### Expand acronyms for new people (DQT etc)
+
+### Ordering the HTML realisations table
+
+We sort by the first column, need a sort order for the second column as well. Claire said:
+
+"E.g. Provider users in Register, Publish and Manage should all be grouped near each other. It's analysis we've done before to see who has access to 1, 2 or 3 of those services."
