@@ -2,10 +2,11 @@
 
 OUTPUTS_SVG=out/key.svg out/actors_dbs.svg out/logical.svg out/physical.svg out/representations.svg
 OUTPUTS_PNG=out/key.png out/actors_dbs.png out/logical.png out/physical.png out/representations.png
-OUTPUTS_HTML=out/representations.html out/index.html
+OUTPUTS_HTML=out/representations.html
+OUTPUTS_STATIC_HTML=out/index.html
 OUTPUTS_DOT=out/actors_dbs.dot out/logical.dot out/physical.dot out/representations.dot
-OUTPUTS=$(OUTPUTS_SVG) $(OUTPUTS_PNG) $(OUTPUTS_HTML)
-SOURCES=src/model.rb src/key.dot Makefile README.md
+OUTPUTS=$(OUTPUTS_SVG) $(OUTPUTS_PNG) $(OUTPUTS_HTML) $(OUTPUTS_STATIC_HTML)
+SOURCES=src/model.rb src/engine.rb src/key.dot Makefile README.md src/index.html
 
 all : $(OUTPUTS)
 

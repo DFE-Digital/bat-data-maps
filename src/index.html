@@ -1,15 +1,15 @@
 <html>
   <head>
-    <title>DfE BAT Data Map</title>
+    <title>DfE BAT Data Maps</title>
   </head>
   <body>
     <header>
-      <h1>DfE BAT Data Map</h1>
+      <h1>DfE BAT Data Maps</h1>
     </header>
     <nav>
       <h2>Table of Contents</h2>
       <ul>
-        <li><a href="#about">About the Data Map</a></li>
+        <li><a href="#about">About the Data Maps</a></li>
         <li><a href="logical.svg">Logical Objects</a>: The real-world things we care about</li>
         <li><a href="physical.svg">Physical Databases</a>: Where we store data</li>
         <li><a href="representations.svg">Representations</a>: Which databases represent data about which real-world objects
@@ -23,8 +23,39 @@
 
 
     <main>
-      <h2 id="about">About the Data Map</h2>
-      ...FIXME: Alaric to write more prose...
+      <h2 id="about">About the Data Maps</h2>
+
+      <h3>What the Data Maps are about</h3>
+
+      <p>These maps exist to give a high-level summary of what data we deal with, where it's stored, how it's represented, and how it's processed.</p>
+
+      <p>By a "high-level summary", we mean that fine technical details aren't included on the Map - they would just clutter it, and confuse most readers. However, by indicating where the data is stored in databases, the Physical Databases map gives a reader seeking those technical details directions to where those details can be found. There's no point in duplicating precise details of schemas, when it's easy enough to go to the actual database and take a look.</p>
+
+      <p>To give a longer justification for the things we DO record:</p>
+
+      <dl>
+        <dt>Logical Objects</dt>
+        <dd>Logical Objects are the real-world "things" we care about - people, courses, applications, schools, that sort of thing.</dd>
+
+        <dt>Logical Object Links</dt>
+        <dd>We also record <em>links</em> between logical objects. For instance, an ITT application involves a Person who is applying, a Course they are applying for, and so on. Therefore, we say there are links from the "ITT Application" logical object to "Person", "Course", and so on.</dd>
+
+        <dt>Physical Databases</dt>
+        <dd>A physical database is an actual database containing data, somewhere within the DfE's infrastructure. We give the name of the database, but not precise details like connection strings - that information might be a bit security sensitive, and it's not too hard to find somebody who can hook you up with connection details to a database if you know what it's called.</dd>
+
+        <dt>Database Synchronisations</dt>
+        <dd>We often duplicate data between databases, for a number of reasons. It's important to know when data is duplicated - and, most importantly, which is the "original" data and which is the (possibly outdated) duplicate. Therefore, all processes that duplicate data between databases without any significant processing/alteration are listed.</dd>
+
+        <dt>Representations</dt>
+        <dd>Tables in a physical database contain data about real-world logical objects; we can say that the data in the databases <em>represents</em> those objects in our databases. This is the link between those physical databases and the logical objects, so we document it to enable people to navigate between them. At the simplest level, we just record that information about a given object is present in a given database; but where possible, we also record which table in the database holds that information, and what identifying fields there are (ranging from nice unique IDs to "fuzzy" or optional identifiers like an email address).</dd>
+
+        <dt>Actors</dt>
+        <dd>We also record what things <em>use</em> data; actors include services, organisations, and other systems. Sometimes an actor's use of a database is indirect, because an actor (such as a user-facing service) uses another actor (such as an internal API service) that actually uses the data, so we also record where actors use other actors to access data.</dd>
+      </dl>
+
+      <h3>How to edit the Data Map</h3>
+
+      <p>The Data Map is contained in the <a href="https://github.com/DFE-Digital/bat-data-maps">bat-data-maps GitHub repo</a>; see the repo's `README` for details on how to edit the map. Please submit pull requests with your proposed changes, and we (the Data Insights Team) will merge them for you.</p>
     </main>
   </body>
 </html>
