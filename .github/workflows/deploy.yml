@@ -1,0 +1,69 @@
+name: Deploy to GOV.UK PaaS
+
+on:
+  push:
+    branches:
+    - master
+
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3
+        bundler-cache: true
+
+    - name: Install graphviz
+      run: sudo apt-get install -y graphviz
+
+    - name: Build images using graphviz
+      run: make all
+
+    - name: Set environment variables
+      run: |
+        SPACE=bat-qa
+        echo "SPACE=${SPACE}" >> $GITHUB_ENV
+        APP_NAME=bat-data-map
+        echo "APP_NAME=${APP_NAME}" >> $GITHUB_ENV
+        key_vault_infra_secret_name=BAT-INFRA-SECRETS-QA
+        echo "key_vault_infra_secret_name=${key_vault_infra_secret_name}" >> $GITHUB_ENV
+        key_vault_name=s121d01-shared-kv-01
+        echo "key_vault_name=${key_vault_name}" >> $GITHUB_ENV
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS_QA }}
+
+    - name: Validate Key Vault Secrets
+      uses: DFE-Digital/github-actions/validate-key-vault-secrets@master
+      with:
+        KEY_VAULT: ${{ env.key_vault_name }}
+        SECRETS: |
+          ${{ env.key_vault_infra_secret_name }}
+
+    - uses: DFE-Digital/keyvault-yaml-secret@v1
+      id: get-secrets
+      with:
+        keyvault: ${{ env.key_vault_name }}
+        secret: ${{ env.key_vault_infra_secret_name }}
+        key: CF_USER,CF_PASSWORD
+
+    - name: Configure Cloud Foundry CLI with space ${{ env.SPACE }}
+      uses: DFE-Digital/github-actions/setup-cf-cli@master
+      with:
+        CF_USERNAME: ${{ steps.get-secrets.outputs.CF_USER }}
+        CF_PASSWORD: ${{ steps.get-secrets.outputs.CF_PASSWORD }}
+        CF_SPACE_NAME: ${{ env.SPACE }}
+
+    - name: Push ${{ env.APP_NAME }} to GOV.UK PaaS
+      run: cf push -p out -b staticfile_buildpack --disk 128M --memory 64M ${{ env.APP_NAME }}
