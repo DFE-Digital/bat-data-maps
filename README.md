@@ -75,3 +75,22 @@ Ok, so we have lots of different things in databases that are... *aspects* of a 
 We sort by the first column, need a sort order for the second column as well. Claire said:
 
 "E.g. Provider users in Register, Publish and Manage should all be grouped near each other. It's analysis we've done before to see who has access to 1, 2 or 3 of those services."
+
+### GOV.UK PaaS set-up
+
+The application is called bat-data-map and is supported by the Staticfile buildpack. It is deployed in the space bat-qa, in the dfe organisation.
+
+There is no cdn-route service, we simply use the default .london.cloudapps.digital domain.
+i.e. https://bat-data-map.london.cloudapps.digital/
+
+### Deployment
+
+A github action workflow 'Deploy to GOV.UK PaaS' is triggered on push to master.
+This configures the deployment environment, and runs a 'make all' before pushing the updates to PaaS.
+
+The PaaS service account credentials are stored in Azure keyvault.
+We have an Azure service principal (s121d01-keyvault-readonly-access) and we store the service principal client secret in github secrets, so the workflow can connect to AZ and collect the PaaS credentials.
+This is configured as per,
+https://technical-guidance.education.gov.uk/infrastructure/hosting/azure-cip/#service-principal
+
+There is currently only one environment, and any changes should be previewed locally.
