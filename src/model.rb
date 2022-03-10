@@ -1,4 +1,4 @@
->## Setup, you shouldn't need to edit this part
+## Setup, you shouldn't need to edit this part
 
 require_relative 'engine'
 map = Map.new()
