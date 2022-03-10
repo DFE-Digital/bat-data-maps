@@ -69,3 +69,22 @@ This shows what services or other software agents use what physical databases. I
 Ok, so we have lots of different things in databases that are... *aspects* of a person. Like, `candidate` and `user`. I've mapped them all to the logical object of a "Person" because people are what exist in the real world, but it feels like there's a missing stage here - some logical object corresponding to the "role" of a person as a candidate or a user that actually gets implemented in the DB. It would be nice to have that to reflect that multiple databases tables implement any particular "role", but there's nothing in the map to say that these tables all represent that "role" other than that they're all listed as representations of a "person", which can also mean weaker links like those between tables representing `candidate` and `user`.
 
 Would introducing a "subtype" notion in the logical model be worth the complexity?
+
+### GOV.UK PaaS set-up
+
+The application is called bat-data-map and is supported by the Staticfile buildpack. It is deployed in the space bat-qa, in the dfe organisation.
+
+There is no cdn-route service, we simply use the default .london.cloudapps.digital domain.
+i.e. https://bat-data-map.london.cloudapps.digital/
+
+### Deployment
+
+A github action workflow 'Deploy to GOV.UK PaaS' is triggered on push to master.
+This configures the deployment environment, and runs a 'make all' before pushing the updates to PaaS.
+
+The PaaS service account credentials are stored in Azure keyvault.
+We have an Azure service principal (s121d01-keyvault-readonly-access) and we store the service principal client secret in github secrets, so the workflow can connect to AZ and collect the PaaS credentials.
+This is configured as per,
+https://technical-guidance.education.gov.uk/infrastructure/hosting/azure-cip/#service-principal
+
+There is currently only one environment, and any changes should be previewed locally.
