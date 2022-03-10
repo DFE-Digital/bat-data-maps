@@ -205,7 +205,16 @@ class Map
     puts "<body>"
     puts "<table>"
     puts "<tr><th>Logical Object</th><th>Physical Database</th><th>Table [ : Key]</th></tr>"
-    @representations.sort { |a,b| a.logical_object <=> b.logical_object }.each do |representation|
+
+    sorted_representations = @representations.sort do |a,b|
+      comp = a.logical_object <=> b.logical_object
+      if comp == 0 && a.table != nil && b.table != nil
+        comp = a.table <=> b.table
+      end
+      comp
+    end
+
+    sorted_representations.each do |representation|
       object_name = @nodes[representation.logical_object].name
       db_name = @nodes[representation.physical_database].name
       if representation.table != nil

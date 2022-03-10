@@ -31,7 +31,7 @@ clean :
 out :
 	mkdir out
 
-$(OUTPUTS_DOT) $(OUTPUTS_HTML) : src/model.rb out
+$(OUTPUTS_DOT) $(OUTPUTS_HTML) : src/model.rb src/engine.rb out
 	cd out ; ruby ../src/model.rb
 
 NEATO_FLAGS=-Goverlap=voronoi -Gsplines=true -Gsep=.5
