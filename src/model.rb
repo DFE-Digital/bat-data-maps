@@ -1,10 +1,51 @@
+>## Setup, you shouldn't need to edit this part
+
 require_relative 'engine'
-
-## The data
-
 map = Map.new()
 
-# Logical objects, and how they link to each other
+## General Instructions
+
+# Lines that start with a #, like this one, are comments to you, the
+# editor/viewer. The computer ignores them.
+
+# You can also add a comment to the end of any line; the computer actually
+# ignores anything from a # to the end of that line.
+
+# Most things declared in this file have a "SHORT NAME" used to identify
+# them. The SHORT NAMEs *must* be unique, so the system can correctly work out
+# what you're talking about when you refer to them! Even when they're different
+# kinds of things!
+
+# If you're stuck, consult your nearest friendly Ruby programmer, or ask the
+# Data Insights Team in Slack.
+
+## Logical objects, and how they link to each other
+
+# Logical objects are specified like this:
+
+# map.logical_object("SHORT NAME","FULL TITLE",[...OPTIONAL FIELDS...])
+
+# The SHORT NAME is used to refer to that object elsewhere in this file, so make it short and snappy.
+
+# The FULL TITLE is what's displayed on diagrams, so make it meaningful.
+
+# The ...OPTIONAL FIELDS... explain parts of the information about that object we care about. The format for an OPTIONAL FIELD is:
+
+# ["SHORT NAME","FULL TITLE",OPTIONAL]
+
+# Again, the SHORT NAME is used to refer to that field elsewhere, so keep it short and snappy, while the FULL TITLE is what's shown in the diagrams.
+
+# OPTIONAL is either true or false - make it true if that field is optional, ie not all of the objects actually have it.
+
+# When there's multiple optional fields, separate them with commas.
+
+# Links between logical objects are specified like this:
+
+# map.logical_link("OBJECT WITH LINK","NAME OF LINKING FIELD","NAME OF LINKED-TO OBJECT")
+
+# For instance, if an "person" object has a field called "home" which refers to an "address" object, we'd write:
+
+# map.logical_link("person","home","address")
 
 # Style guide:
 
@@ -64,7 +105,35 @@ map.logical_object("itt-application","ITT Application",[["applicant","Applicatn"
 map.logical_link("itt-application","applicant","person")
 map.logical_link("itt-application","course","itt-course")
 
-# Physical databases, synchronisations between them, and representations of logical objects in them
+## Physical databases, synchronisations between them, and representations of logical objects in them
+
+# We show a physical database like so:
+
+# map.physical_database("SHORT NAME","FULL TITLE")
+
+# We show synchronisations duplicating information between databases like so:
+
+# map.physical_synch("SOURCE DATABASE","DESTINATION DATABASE","SYNCHRONISATION TRIGGER")
+
+# The SOURCE and DESTINATION DATABASE fields are the SHORT NAMES of the physical databases; the SYNCHRONISATION TRIGGER is any English text describing what causes the synchronisation (write "stream" for real-time streaming of changes as they happen, for example)
+
+# We show that a logical object is represented in a physical database like so:
+
+# map.representation("OBJECT","DATABASE")
+
+# ...where OBJECT is the SHORT NAME of an object, and DATABASES is the SHORT NAME of a physical database.
+
+# If we know the name of the table in the database, we can show that too:
+
+# map.representation("OBJECT","DATABASE","TABLE")
+
+# And if we know about one or more fields in that table that can possibly be used as identifiers for those objects, we can include a comma-separated list of those too:
+
+# map.representation("OBJECT","DATABASE","TABLE",["ID FIELD","ID FIELD",...])
+
+# If an ID FIELD is optional (not present for every record), add a question mark (?) to the end of its name.
+
+# If an ID FIELD is a fuzzy identifier - something that might be used as an identifier in a pinch, but not to be relied on, such as using an email address to identify a person - add a tilde (~) to the end of its name. This also implies it's optional, so don't add both ~ and ?.
 
 # Synchronisation done within an existing component (like the updating of
 # bigquery by the services) or by a dedicated data synchronising system should
@@ -146,7 +215,25 @@ map.representation("itt-subject","bigquery","subject_publish_api",["subject_id",
 map.representation("itt-subject","bigquery","subjects_apply",["subject_id","name","code"])
 map.representation("person","bigquery","user",["user_id"])
 
-# Actors, and what physical DBs and other actors they use
+## Actors, and what physical DBs and other actors they use
+
+# Actors can be software components, actual services, other organisations - anything that uses data.
+
+# Show them like this:
+
+# map.actor("SHORT NAME","FULL TITLE")
+
+# We also record what actors use what databases:
+
+# map.actor_uses("ACTOR","DATABASE")
+
+# ...where ACTOR is the SHORT NAME of an actor, and DATABASE is the SHORT NAME of a database the actor uses.
+
+# Often, actors access a database through another actor (often called an "API service") rather than directly. That's useful to know about, so we record it like so:
+
+# map.actor_uses("ACTOR","API ACTOR")
+
+# ...where ACTOR and API ACTOR are the SHORT NAMEs of actors.
 
 map.actor("git", "GIT (Get Into Teaching)")
 map.actor_uses("git","git crm")
@@ -206,6 +293,6 @@ map.actor_uses("claim","dqt")
 map.actor("dashboards","Teacher Services Dashboards")
 map.actor_uses("dashboards","bigquery")
 
-## Final generation
+## Final generation of the outputs - you don't need to edit this bit:
 
 map.generate_all_views()

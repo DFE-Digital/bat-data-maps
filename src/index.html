@@ -18,18 +18,25 @@
             </ul>
         </li>
         <li><a href="actors_dbs.svg">Actors</a>: Which systems/services/organisations use which databases</li>
+        <li><a href="key.svg">Key to the Diagrams</a>: A quick description of what the symbols and arrows mean</li>
       </ul>
     </nav>
-
 
     <main>
       <h2 id="about">About the Data Maps</h2>
 
       <h3>What the Data Maps are about</h3>
 
-      <p>These maps exist to give a high-level summary of what data we deal with, where it's stored, how it's represented, and how it's processed.</p>
+      <p>These maps exist to give a high-level summary of what data we deal
+      with, where it's stored, how it's represented, and how it's processed.</p>
 
-      <p>By a "high-level summary", we mean that fine technical details aren't included on the Map - they would just clutter it, and confuse most readers. However, by indicating where the data is stored in databases, the Physical Databases map gives a reader seeking those technical details directions to where those details can be found. There's no point in duplicating precise details of schemas, when it's easy enough to go to the actual database and take a look.</p>
+      <p>By a "high-level summary", we mean that fine technical details aren't
+      included on the Map - they would just clutter it, and confuse most
+      readers. However, by indicating where the data is stored in databases, the
+      Physical Databases map gives a reader seeking those technical details
+      directions to where those details can be found. There's no point in
+      duplicating precise details of schemas, when it's easy enough to go to the
+      actual database and take a look.</p>
 
       <p>To give a longer justification for the things we DO record:</p>
 
@@ -38,24 +45,100 @@
         <dd>Logical Objects are the real-world "things" we care about - people, courses, applications, schools, that sort of thing.</dd>
 
         <dt>Logical Object Links</dt>
-        <dd>We also record <em>links</em> between logical objects. For instance, an ITT application involves a Person who is applying, a Course they are applying for, and so on. Therefore, we say there are links from the "ITT Application" logical object to "Person", "Course", and so on.</dd>
+        <dd>We also record <em>links</em> between logical objects. For instance,
+        an ITT application involves a Person who is applying, a Course they are
+        applying for, and so on. Therefore, we say there are links from the "ITT
+        Application" logical object to "Person", "Course", and so on.</dd>
 
         <dt>Physical Databases</dt>
-        <dd>A physical database is an actual database containing data, somewhere within the DfE's infrastructure. We give the name of the database, but not precise details like connection strings - that information might be a bit security sensitive, and it's not too hard to find somebody who can hook you up with connection details to a database if you know what it's called.</dd>
+        <dd>A physical database is an actual database containing data, somewhere
+        within the DfE's infrastructure. We give the name of the database, but
+        not precise details like connection strings - that information might be
+        a bit security sensitive, and it's not too hard to find somebody who can
+        hook you up with connection details to a database if you know what it's
+        called.</dd>
 
         <dt>Database Synchronisations</dt>
-        <dd>We often duplicate data between databases, for a number of reasons. It's important to know when data is duplicated - and, most importantly, which is the "original" data and which is the (possibly outdated) duplicate. Therefore, all processes that duplicate data between databases without any significant processing/alteration are listed.</dd>
+        <dd>We often duplicate data between databases, for a number of
+        reasons. It's important to know when data is duplicated - and, most
+        importantly, which is the "original" data and which is the (possibly
+        outdated) duplicate. Therefore, all processes that duplicate data
+        between databases without any significant processing/alteration are
+        listed.</dd>
 
         <dt>Representations</dt>
-        <dd>Tables in a physical database contain data about real-world logical objects; we can say that the data in the databases <em>represents</em> those objects in our databases. This is the link between those physical databases and the logical objects, so we document it to enable people to navigate between them. At the simplest level, we just record that information about a given object is present in a given database; but where possible, we also record which table in the database holds that information, and what identifying fields there are (ranging from nice unique IDs to "fuzzy" or optional identifiers like an email address).</dd>
+        <dd>Tables in a physical database contain data about real-world logical
+        objects; we can say that the data in the databases <em>represents</em>
+        those objects in our databases. This is the link between those physical
+        databases and the logical objects, so we document it to enable people to
+        navigate between them. At the simplest level, we just record that
+        information about a given object is present in a given database; but
+        where possible, we also record which table in the database holds that
+        information, and what identifying fields there are (ranging from nice
+        unique IDs to "fuzzy" or optional identifiers like an email
+        address).</dd>
 
         <dt>Actors</dt>
-        <dd>We also record what things <em>use</em> data; actors include services, organisations, and other systems. Sometimes an actor's use of a database is indirect, because an actor (such as a user-facing service) uses another actor (such as an internal API service) that actually uses the data, so we also record where actors use other actors to access data.</dd>
+        <dd>We also record what things <em>use</em> data; actors include
+        services, organisations, and other systems. Sometimes an actor's use of
+        a database is indirect, because an actor (such as a user-facing service)
+        uses another actor (such as an internal API service) that actually uses
+        the data, so we also record where actors use other actors to access
+        data.</dd>
       </dl>
 
-      <h3>How to edit the Data Map</h3>
+      <h3>I found a mistake / I know something relevant that's not in the maps!</h3>
 
-      <p>The Data Map is contained in the <a href="https://github.com/DFE-Digital/bat-data-maps">bat-data-maps GitHub repo</a>; see the repo's `README` for details on how to edit the map. Please submit pull requests with your proposed changes, and we (the Data Insights Team) will merge them for you.</p>
+      <p>These maps are like Wikipedia - they're a community effort. Please see
+      the <a href="#how-to-edit">instructions below on how to submit
+      improvements to them</a>!</p>
+
+      <h3>How complete and detailed should the maps be?</h3>
+
+      <p>The maps should provide a high-level summary of what's going on with data.</p>
+
+      <dl>
+        <dt>They should not contain detailed technical schemas of databases</dt>
+        <dd>Instead, they should summarise the contents of a database at the
+        level of "It contains information about people and schools"; people who
+        need finer detail should go and talk to the team that maintains the
+        database.</dd>
+
+        <dt>They should not contain details only of interest within a service team</dt>
+        <dd>For instance, if a services uses a Redis instance to cache
+        information, that doesn't need to be documented on the data maps because
+        that's probably not interesting to people outside of that service
+        team.</dd>
+
+        <dt>The should not duplicate other resources (too much)</dt>
+        <dd>Mostly, these maps are intended to share information that's
+        currently only in people's heads. Where useful information exists in
+        other places, particularly if it's more detailed, then this map should
+        just be used to find those other resources. However, that's not to say
+        duplication is forbidden here - these maps will often contain summaries
+        of more detailed information, bringing together those summaries from
+        multiple sources to provide a combined map that doesn't exist as a whole
+        in any other form.</dd>
+      </dl>
+
+      <h3>How up to date and complete are the maps?</h3>
+
+      <p>As of 2022-03-10, the maps are mainly the work of one person, so only
+      contain detail they have encountered in their few months at DfE. Please
+      contribute further information and corrections if you know anything that's
+      not represented.</p>
+
+      <h3>Who do I ask for more information about something?</h3>
+
+      <p>We haven't included contact information for who the experts are on
+      particular things on the map. This is purely because it's pretty easy to
+      find teams in Slack, and actors/physical databases tend to be named after
+      teams, so that's probably redundant information. However, if it would be
+      helpful, we can include some kind of contact directory in the map.</p>
+
+      <h3 id="how-to-edit">How to edit the Data Maps</h3>
+
+      <p>The Data Maps are contained in the <a href="https://github.com/DFE-Digital/bat-data-maps">bat-data-maps GitHub repo</a>; see the repo's `README` for details on how to edit the map. Please submit pull requests with your proposed changes, and we (the Data Insights Team) will merge them for you.</p>
     </main>
   </body>
 </html>
