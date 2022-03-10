@@ -101,7 +101,7 @@ map.logical_link("itt-course","provider","itt-provider")
 map.logical_link("itt-course","accreditor","accredited-provider")
 map.logical_link("itt-course","subject","itt-subject")
 
-map.logical_object("itt-application","ITT Application",[["applicant","Applicatn"],["course","Course"],"status"])
+map.logical_object("itt-application","ITT Application",[["applicant","Applicant"],["course","Course"],"status"])
 map.logical_link("itt-application","applicant","person")
 map.logical_link("itt-application","course","itt-course")
 
@@ -265,7 +265,6 @@ map.actor_uses("nao","dttp")
 
 map.actor("mra","Market Regulation Authority")
 map.actor_uses("mra","dttp")
-
 map.actor("corpa","Corporate Assurance")
 map.actor_uses("corpa","dttp")
 
