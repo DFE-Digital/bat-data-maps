@@ -70,7 +70,11 @@ Ok, so we have lots of different things in databases that are... *aspects* of a 
 
 Would introducing a "subtype" notion in the logical model be worth the complexity?
 
-### GOV.UK PaaS set-up
+### `index.html` is ugly
+
+It needs some CSS to make it look nicer.
+
+## GOV.UK PaaS set-up
 
 The application is called bat-data-map and is supported by the Staticfile buildpack. It is deployed in the space bat-qa, in the dfe organisation.
 
