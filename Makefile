@@ -28,8 +28,10 @@ view-representations : out/representations.svg
 clean :
 	-rm -rf out
 
-out :
+out : src/resources/*
+	-rm -rf out
 	mkdir out
+	cp -R src/resources out
 
 $(OUTPUTS_DOT) $(OUTPUTS_HTML) : src/model.rb src/engine.rb out
 	cd out ; ruby ../src/model.rb

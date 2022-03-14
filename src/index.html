@@ -1,24 +1,80 @@
 <html>
   <head>
     <title>DfE BAT Data Maps</title>
+    <style>
+      body {
+          font-family: sans-serif;
+      }
+      header {
+          height: 142px;
+          position: relative;
+      }
+      img.header {
+          float: left;
+      }
+      header h1 {
+          position: absolute;
+          bottom: 0px;
+          left: 250px;
+          margin-bottom: 3px;
+          padding-bottom: 0px;
+      }
+      header p {
+          position: absolute;
+          bottom: 0px;
+          right: 0px;
+      }
+      nav {
+          clear: both;
+      }
+
+      nav ul li {
+          text-align: left;
+          float: left;
+          list-style: none;
+          width: 300px;
+          height: 200px;
+          margin: 1em;
+      }
+
+      li img {
+          display: block;
+          border: 1px solid black;
+          margin-bottom: 1em;
+      }
+
+      main {
+          clear: both;
+      }
+      
+      dl dt {
+          font-style: italic;
+          font-weight: bold;
+          margin: 1em;
+      }
+
+      dl dd {
+      }
+    </style>
   </head>
   <body>
     <header>
+      <img class="header" src="resources/DfE.png" />
       <h1>DfE BAT Data Maps</h1>
+      <p>Contact: Data Insights Team (#twd_data_insights)</p>
     </header>
     <nav>
       <h2>Table of Contents</h2>
+
       <ul>
-        <li><a href="#about">About the Data Maps</a></li>
-        <li><a href="logical.svg">Logical Objects</a>: The real-world things we care about</li>
-        <li><a href="physical.svg">Physical Databases</a>: Where we store data</li>
-        <li><a href="representations.svg">Representations</a>: Which databases represent data about which real-world objects
-          <ul>
-            <li><a href="representations.html">Detailed Representations</a>: Listing the physical database tables and ID fields</li>
-            </ul>
-        </li>
-        <li><a href="actors_dbs.svg">Actors</a>: Which systems/services/organisations use which databases</li>
-        <li><a href="key.svg">Key to the Diagrams</a>: A quick description of what the symbols and arrows mean</li>
+        <li><a href="#about"><img src="resources/about.png" />
+        About the Data Maps</a></li>
+        <li><a href="logical.svg"><img src="resources/logical.png" />Logical Objects map</a>: The real-world things we care about</li>
+        <li><a href="physical.svg"><img src="resources/physical.png" />Physical Databases map</a>: Where we store data</li>
+        <li><a href="representations.svg"><img src="resources/representations.png" />Representations map</a>: Which databases represent data about which real-world objects</li>
+        <li><a href="representations.html"><img src="resources/representations-table.png" />Detailed Representations table</a>: Listing the physical database tables and ID fields</li>
+        <li><a href="actors_dbs.svg"><img src="resources/actors.png" />Actors map</a>: Which systems/services/organisations use which databases</li>
+        <li><a href="key.svg"><img src="resources/key.png" />Key to the Diagrams</a>: A quick description of what the symbols and arrows mean</li>
       </ul>
     </nav>
 
