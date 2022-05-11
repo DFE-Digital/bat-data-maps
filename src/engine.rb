@@ -15,6 +15,9 @@ class LogicalObject
   def render
     puts "\"#{self.id}\" ["
     puts "  shape=record,"
+    puts "  fillcolor=\"#d5e8d4\","
+    puts "  style=filled,"
+    puts "  color=\"#82b366\","
     print "  label = \"{<root> #{self.name}"
     self.parts.each do |part|
       print " |"
