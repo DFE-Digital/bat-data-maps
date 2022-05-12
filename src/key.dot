@@ -1,7 +1,7 @@
 digraph "DfE Key" {
-        "service" [ label = "Service / System"; shape = box3d ];
-        "database" [ label = "Database"; shape = oval ];
-        "object" [ label = "Problem-Domain Object"; shape = record ];
+        "service" [ label = "Service / System"; shape = box3d; fillcolor="#d5e8d4", style=filled, color="#82b366" ];
+        "database" [ label = "Database"; shape = oval; fillcolor="#d5e8d4", style=filled, color="#82b366" ];
+        "object" [ label = "Problem-Domain Object"; shape = record; fillcolor="#d5e8d4", style=filled, color="#82b366" ];
 
         "service" -> "service" [ label = "API call"; arrowhead = normal; ]
         "service" -> "database" [ label = "Uses Database"; ]

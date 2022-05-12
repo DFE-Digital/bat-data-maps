@@ -1,3 +1,7 @@
+## Constants
+
+STYLE = 'fillcolor="#d5e8d4", style=filled, color="#82b366"'
+
 ## Types
 
 LogicalObjectPart = Struct.new(:id,:name,:optional?)
@@ -14,10 +18,7 @@ ActorDependency = Struct.new(:using_actor,:used_actor_or_db)
 class LogicalObject
   def render
     puts "\"#{self.id}\" ["
-    puts "  shape=record,"
-    puts "  fillcolor=\"#d5e8d4\","
-    puts "  style=filled,"
-    puts "  color=\"#82b366\","
+    puts "  shape=record," + STYLE
     print "  label = \"{<root> #{self.name}"
     self.parts.each do |part|
       print " |"
@@ -42,7 +43,7 @@ end
 
 class PhysicalDatabase
   def render
-    puts "\"#{self.id}\" [shape=oval, label=\"#{self.name}\"]"
+    puts "\"#{self.id}\" [shape=oval, label=\"#{self.name}\", #{STYLE}]"
   end
 end
 
@@ -74,7 +75,7 @@ end
 
 class Actor
   def render
-    puts "\"#{self.id}\" [shape=box3d, label=\"#{self.name}\"]"
+    puts "\"#{self.id}\" [shape=box3d, label=\"#{self.name}\", #{STYLE}]"
   end
 end
 
