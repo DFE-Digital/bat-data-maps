@@ -129,11 +129,17 @@ map.logical_link("itt-application","course","itt-course")
 
 # And if we know about one or more fields in that table that can possibly be used as identifiers for those objects, we can include a comma-separated list of those too:
 
-# map.representation("OBJECT","DATABASE","TABLE",["ID FIELD","ID FIELD",...])
+# map.representation("OBJECT","DATABASE","TABLE",["ID FIELD",["OTHER FIELD","MEANING"],["OTHER FIELD","MEANING","DOCS URL"],...])
+
+# There can be any number of ID FIELDs and OTHER FIELDs in any order.
 
 # If an ID FIELD is optional (not present for every record), add a question mark (?) to the end of its name.
 
 # If an ID FIELD is a fuzzy identifier - something that might be used as an identifier in a pinch, but not to be relied on, such as using an email address to identify a person - add a tilde (~) to the end of its name. This also implies it's optional, so don't add both ~ and ?.
+
+# An OTHER FIELD must have a meaning (ideally a name as defined in the Standard
+# Definitions) and an optional DOCS URL (ideally pointing to that definition in
+# the Standard Definitions).
 
 # Synchronisation done within an existing component (like the updating of
 # bigquery by the services) or by a dedicated data synchronising system should
@@ -196,6 +202,23 @@ map.physical_synch("publish db","bigquery","stream")
 map.physical_synch("apply db","bigquery","stream")
 map.physical_synch("register db","bigquery","stream")
 map.representation("itt-application","bigquery","application_choices",["application_choice_id"])
+map.representation("itt-application","bigquery","application_choice_details",[
+                     "id",
+                     ["sd_unsubmitted","ITT Application Unsubmitted","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.ji8thz991bt7"],
+                     ["sd_awaiting_provider_decision","ITT Application Awaiting Provider Decision","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.xkl3nhqcm3yv"],
+                     ["sd_accepted_pending_conditions","ITT Application Accepted Pending Conditions","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.slydf04g66cc"],
+                     ["sd_awaiting_candidate_decision","ITT Application Awaiting Candidate Decision","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.5deefpcrgfw6"],
+                     ["sd_deferred","ITT Application Deferred","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.du3zzbgj256b"],
+                     ["sd_recruited","ITT Application Recruited","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.k8wqqijehgs5"],
+                     ["sd_rejected_by_default","ITT Application RBD","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.q2i7d9yjvtj"],
+                     ["sd_offer_declined_by_default","ITT Application DBD","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.coqt6h1ty4rc"],
+                     ["sd_offer_declined","ITT Application Offer Declined","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.8ydxopu0zfv8"],
+                     ["sd_withdrawn","ITT Application Withdrawn","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.f4x8z6sjalky"],
+                     ["sd_rejected","ITT Application Rejected","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.m99mn3941u9"],
+                     ["sd_unsuccessful","ITT Application Unsuccessful","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.mm5ejh8a9a70"],
+                     ["sd_apply_1","ITT Application Apply 1","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.28pqfub0q0h"],
+                     ["sd_apply_2","ITT Application Apply 2","https://docs.google.com/document/d/1XgYkA-lmoLHAheooVlZXbL1s7psTS5ihRKSEjQH0hw0/edit#bookmark=id.mms0ikp3bwdw"]
+                   ])
 map.representation("person","bigquery","candidates",["candidate_id"])
 map.representation("itt-course","bigquery","courses_apply",["course_id","code","uuid"])
 map.representation("person","bigquery","organisation_user",["user_id"])

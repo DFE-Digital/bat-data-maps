@@ -9,7 +9,7 @@ LogicalObject = Struct.new(:id,:name,:parts)
 LogicalLink = Struct.new(:source_object,:source_part,:target_object)
 PhysicalDatabase = Struct.new(:id,:name)
 PhysicalSynchronization = Struct.new(:source_db,:target_db,:trigger)
-Representation = Struct.new(:logical_object,:physical_database,:table,:keys)
+Representation = Struct.new(:logical_object,:physical_database,:table,:fields)
 Actor = Struct.new(:id,:name)
 ActorDependency = Struct.new(:using_actor,:used_actor_or_db)
 
@@ -56,9 +56,9 @@ end
 class Representation
   # De-dupe realization arcs, when the object is realised in multiple tables in
   # the same physical DB just draw one arrow
-  def initialize(logical_object, physical_database, table, keys)
+  def initialize(logical_object, physical_database, table, fields)
     @@already_done = Hash.new()
-    super(logical_object, physical_database, table, keys)
+    super(logical_object, physical_database, table, fields)
   end
   def render
     if not @@already_done[self.logical_object + "->" + self.physical_database]
@@ -141,8 +141,8 @@ class Map
     @physical_synchs.push(PhysicalSynchronization.new(source_db,target_db,trigger))
   end
 
-  def representation(logical_object,physical_database,table=nil,keys=[])
-    @representations.push(Representation.new(logical_object,physical_database,table,keys))
+  def representation(logical_object,physical_database,table=nil,fields=[])
+    @representations.push(Representation.new(logical_object,physical_database,table,fields))
   end
 
   def actor(id,name=id)
@@ -186,13 +186,21 @@ class Map
     puts "}"
   end
 
-  def render_key_html(key)
-    if key.end_with?("?")
-      "<i>#{key[..-2]}</i> <b>(optional)</b>"
-    elsif key.end_with?("~")
-      "<i>#{key[..-2]}</i> <b>(fuzzy)</b>"
+  def render_field_html(field)
+    if field.kind_of?(Array)
+      if field.length == 3
+        "<i>#{field[0]}<i> (<b><a href=\"#{field[2]}\">#{field[1]}</a></b>)"
+      else
+        "<i>#{field[0]}<i> (<b>#{field[1]}</b>)"
+      end
     else
-      key
+      if field.end_with?("?")
+        "<i>#{field[..-2]}</i> (<b>optional key</b>)"
+      elsif field.end_with?("~")
+        "<i>#{field[..-2]}</i> (<b>fuzzy key</b>)"
+      else
+        "<i>#{field}</i> (<b>key</b>)"
+      end
     end
   end
 
@@ -208,7 +216,7 @@ class Map
     puts "</head>"
     puts "<body>"
     puts "<table>"
-    puts "<tr><th>Logical Object</th><th>Physical Database</th><th>Table [ : Key]</th></tr>"
+    puts "<tr><th>Logical Object</th><th>Physical Database</th><th>Table [ : Field (meaning)]</th></tr>"
 
     sorted_representations = @representations.sort do |a,b|
       comp = a.logical_object <=> b.logical_object
@@ -222,14 +230,15 @@ class Map
       object_name = @nodes[representation.logical_object].name
       db_name = @nodes[representation.physical_database].name
       if representation.table != nil
-        if representation.keys.length == 0
+        number_of_fields = representation.fields.length
+        if number_of_fields == 0
           puts "<tr><td>#{object_name}</td><td>#{db_name}</td><td>#{representation.table}</td></tr>"
         else
-          kr = render_key_html(representation.keys.first)
-          puts "<tr><td rowspan=\"#{representation.keys.length}\">#{object_name}</td><td rowspan=\"#{representation.keys.length}\">#{db_name}</td><td>#{representation.table} : #{kr}</td></tr>"
-          representation.keys[1..].each do |key|
-            kr = render_key_html(key)
-            puts "<tr><td>#{representation.table} : #{kr}</td></tr>"
+          fr = render_field_html(representation.fields.first)
+          puts "<tr><td rowspan=\"#{number_of_fields}\">#{object_name}</td><td rowspan=\"#{number_of_fields}\">#{db_name}</td><td>#{representation.table} : #{fr}</td></tr>"
+          representation.fields[1..].each do |field|
+            fr = render_field_html(field)
+            puts "<tr><td>#{representation.table} : #{fr}</td></tr>"
           end
         end
       else
