@@ -18,19 +18,23 @@ ActorDependency = Struct.new(:using_actor,:used_actor_or_db)
 class LogicalObject
   def render
     puts "\"#{self.id}\" ["
-    puts "  shape=record," + STYLE
-    print "  label = \"{<root> #{self.name}"
+    puts "  shape=none," + STYLE
+    print "  label = "
+    print "<<table border=\"0\" cellborder=\"0\" cellspacing=\"0\">"
+    print "<tr><td port=\"root\" border=\"1\"><b>#{self.name}</b></td></tr>"
     self.parts.each do |part|
-      print " |"
       if part.id != nil
-        print " <#{part.id}>"
+        print "<tr><td port=\"#{part.id}\">"
+      else
+        print "<tr><td>"
       end
-      print " #{part.name}"
+      print "#{part.name}"
       if part.optional?
         print " (optional)"
       end
+      print "</td></tr>"
     end
-    puts "}\""
+    puts "</table>>"
     puts "];"
   end
 end
