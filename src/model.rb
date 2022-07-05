@@ -197,7 +197,7 @@ map.representation("person","tps db")
 map.physical_database("gias db", "GIAS (Get Information About Schools) DB")
 map.representation("location","gias db")
 
-map.physical_database("bigquery", "BigQuery")
+map.physical_database("bigquery", "Data Insights BigQuery")
 map.physical_synch("publish db","bigquery","stream")
 map.physical_synch("apply db","bigquery","stream")
 map.physical_synch("register db","bigquery","stream")
