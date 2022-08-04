@@ -101,9 +101,12 @@ map.logical_link("itt-course","provider","itt-provider")
 map.logical_link("itt-course","accreditor","accredited-provider")
 map.logical_link("itt-course","subject","itt-subject")
 
-map.logical_object("itt-application","ITT Application",[["applicant","Applicant"],["course","Course"],"status"])
+map.logical_object("itt-cycle","ITT Recruitment Cycle",["start / end"])
+
+map.logical_object("itt-application","ITT Application",[["applicant","Applicant"],["course","Course"],["cycle","Cycle"],"Status"])
 map.logical_link("itt-application","applicant","person")
 map.logical_link("itt-application","course","itt-course")
+map.logical_link("itt-application","cycle","itt-cycle")
 
 ## Physical databases, synchronisations between them, and representations of logical objects in them
 
