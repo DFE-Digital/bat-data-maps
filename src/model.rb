@@ -336,9 +336,6 @@ map.actor_uses("claim","hartlink")
 map.actor("hesa","Higher Education Standards Authority")
 map.actor_uses("hesa","dqt")
 
-map.actor("claim")
-map.actor_uses("claim","dqt")
-
 map.actor("dashboards","Teacher Services Dashboards")
 map.actor_uses("dashboards","bigquery")
 
