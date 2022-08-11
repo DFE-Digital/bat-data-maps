@@ -36,11 +36,11 @@ out : src/resources/*
 $(OUTPUTS_DOT) $(OUTPUTS_HTML) : src/model.rb src/engine.rb out
 	cd out ; ruby ../src/model.rb
 
-NEATO_FLAGS=-Goverlap=voronoi -Gsplines=true -Gsep=.5
+NEATO_FLAGS=-Goverlap=voronoi -Gsplines=true
 
 out/actors_dbs.png out/actors_dbs.svg : out/actors_dbs.dot
-	neato $(NEATO_FLAGS) -Gsep=0.1 -Tsvg out/actors_dbs.dot > out/actors_dbs.svg
-	neato $(NEATO_FLAGS) -Gsep=0.1 -Tpng out/actors_dbs.dot > out/actors_dbs.png
+	neato $(NEATO_FLAGS) -Tsvg out/actors_dbs.dot > out/actors_dbs.svg
+	neato $(NEATO_FLAGS) -Tpng out/actors_dbs.dot > out/actors_dbs.png
 
 out/logical.png out/logical.svg : out/logical.dot
 	neato $(NEATO_FLAGS) -Tsvg out/logical.dot > out/logical.svg

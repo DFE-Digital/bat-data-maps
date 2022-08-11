@@ -155,6 +155,7 @@ map.representation("person","git crm")
 
 map.physical_database("publish db", "Publish DB")
 map.representation("itt-provider","publish db","Provider",["code"])
+map.representation("accredited-provider","publish db")
 map.representation("itt-course","publish db","Course",["code","uuid"])
 map.representation("itt-subject","publish db","Subject",["code","name~"])
 map.representation("location","publish db", "Site", ["uuid"])
@@ -171,6 +172,7 @@ map.representation("person","apply db","ProviderUser",["dfe_sign_in_uid"])
 map.representation("person","apply db","SupportUser",["dfe_sign_in_uid"])
 map.representation("person","apply db","Candidate",["email_address~"])
 map.representation("itt-provider","apply db","Provider",["code"])
+map.representation("accredited-provider","apply db")
 map.representation("itt-course","apply db","Course",["code","uuid"])
 map.representation("itt-subject","apply db","Subject",["code","name~"])
 map.representation("itt-application","apply db","ApplicationChoice",[]) # Maybe provider_ids is the application ID as used by the provider?
@@ -185,17 +187,8 @@ map.representation("itt-subject","register db","Subject",["code","name~"])
 map.representation("itt-application","register db","ApplyApplication",["apply_id"])
 map.representation("location","register db","School",["urn"])
 
-map.physical_database("dttp", "DTTP (Database of Trainee Teachers and Providers)")
-map.physical_synch("dttp","dqt","TRN (Teacher Reference Number) allocation")
-map.physical_synch("dttp","dqt","QTS (Qualified Teacher Status) award")
-map.representation("itt-provider","dttp")
-map.representation("person","dttp")
-
 map.physical_database("dqt", "DQT (Database of Qualified Teachers)")
 map.representation("person","dqt")
-
-map.physical_database("tps db", "TPS (Teacher Pension Service) DB")
-map.representation("person","tps db")
 
 map.physical_database("gias db", "GIAS (Get Information About Schools) DB")
 map.representation("location","gias db")
@@ -241,6 +234,23 @@ map.representation("itt-subject","bigquery","subject_publish_api",["subject_id",
 map.representation("itt-subject","bigquery","subjects_apply",["subject_id","name","code"])
 map.representation("person","bigquery","user",["user_id"])
 
+map.physical_database("hartlink","Teacher Pensions Hartlink DB")
+map.representation("person","hartlink")
+map.representation("employment","hartlink")
+
+map.physical_database("tvs db","Teacher Vacancies DB")
+map.representation("person","tvs db")
+map.representation("job-application","tvs db")
+map.representation("vacancy","tvs db")
+
+map.physical_database("ewc db","EWC DB")
+map.representation("person","ewc db")
+map.physical_synch("ewc db","hartlink","New TRNs (monthly?)")
+map.physical_synch("ewc db","dqt","New QTS awards (monthly)")
+
+map.physical_database("cpd db","CPD DB")
+map.representation("person","cpd db")
+
 ## Actors, and what physical DBs and other actors they use
 
 # Actors can be software components, actual services, other organisations - anything that uses data.
@@ -281,35 +291,49 @@ map.actor("publish apis")
 map.actor_uses("publish apis","publish db")
 
 map.actor("tps", "Teacher Pension Service")
-map.actor_uses("tps","tps db")
-
-map.actor("funding")
-map.actor_uses("funding","dttp")
-
-map.actor("nao","National Audit Office")
-map.actor_uses("nao","dttp")
-
-map.actor("mra","Market Regulation Authority")
-map.actor_uses("mra","dttp")
-map.actor("corpa","Corporate Assurance")
-map.actor_uses("corpa","dttp")
+map.actor_uses("tps","hartlink")
+map.actor_uses("tps","dqt")
 
 map.actor("get experience","Get Experience In Schools")
 map.actor_uses("get experience","experience db")
 
+map.actor("qtapi","Qualified Teachers API") # https://github.com/DFE-Digital/qualified-teachers-api / https://qualified-teachers-api-tech-docs.london.cloudapps.digital/
+map.actor_uses("qtapi","dqt")
+
+map.actor("ts-ssp","Teacher Services Self Service Portal")
+map.actor_uses("ts-ssp","dqt")
+
+# FIXME: Appropriate Bodies interfact with DQT - how?
+
+map.actor("ts-eap","Teacher Services Employers Access Portal")
+map.actor_uses("ts-eap","dqt")
+
 map.actor("tad","Teacher Analysis Division")
 map.actor_uses("tad","apply db")
-map.actor_uses("tad","dttp")
+map.actor_uses("tad","register db")
+map.actor_uses("tad","cpd db")
 map.actor_uses("tad","dqt")
+map.actor_uses("tad","hartlink")
 
 map.actor("gias","Get Information About Schools")
 map.actor_uses("gias","gias db")
 
 map.actor("register", "Register Trainee Teachers")
 map.actor_uses("register","register db")
+map.actor_uses("register","qtapi")
+
+map.actor("find-trn","Find a Lost TRN")
+map.actor_uses("find-trn","qtapi")
+
+map.actor("cpd","Continuous Professional Development")
+map.actor_uses("cpd","cpd db")
+map.actor_uses("cpd","dqt")
+
+map.actor("claim","Claim payments")
+map.actor_uses("claim","dqt")
+map.actor_uses("claim","hartlink")
 
 map.actor("hesa","Higher Education Standards Authority")
-map.actor_uses("hesa","dttp")
 map.actor_uses("hesa","dqt")
 
 map.actor("claim")
@@ -317,6 +341,12 @@ map.actor_uses("claim","dqt")
 
 map.actor("dashboards","Teacher Services Dashboards")
 map.actor_uses("dashboards","bigquery")
+
+map.actor("tvs","Teacher Vacancies")
+map.actor_uses("tvs","tvs db")
+
+map.actor("ewc","Education Workforce Council for Wales")
+map.actor_uses("ewc","ewc db")
 
 ## Final generation of the outputs - you don't need to edit this bit:
 
