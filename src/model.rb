@@ -251,6 +251,9 @@ map.physical_synch("ewc db","dqt","New QTS awards (monthly)")
 map.physical_database("cpd db","CPD DB")
 map.representation("person","cpd db")
 
+map.physical_database("claim db","Claim DB")
+map.representation("person","claim db") # Stores TRN, NINO Name, DOB, email address and a few other pieces of personal data whilst a claim is being processed; just stores TRN and email after claim is done
+
 ## Actors, and what physical DBs and other actors they use
 
 # Actors can be software components, actual services, other organisations - anything that uses data.
@@ -332,6 +335,8 @@ map.actor_uses("cpd","dqt")
 map.actor("claim","Claim payments")
 map.actor_uses("claim","dqt")
 map.actor_uses("claim","hartlink")
+map.actor_uses("claim","gias")
+map.actor_uses("claim","claim db")
 
 map.actor("hesa","Higher Education Standards Authority")
 map.actor_uses("hesa","dqt")
